@@ -1,0 +1,9 @@
+# Core transcription dependency
+faster-whisper>=1.0.0
+
+# Optional: For YouTube downloading (can also be installed via system package manager)
+yt-dlp>=2023.1.6
+
+# Development/testing dependencies (optional)
+# pytest>=7.0.0
+# black>=22.0.0
