@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AlphaSlider } from '@/components/AlphaSlider'
 import { BlogPreview } from '@/components/BlogPreview'
-import { transcribeVideo, transcribeYouTube, generateBlogPostWithProgress, saveResults } from '@/lib/client'
-import { Upload, Link, Video } from 'lucide-react'
+import { PostsList } from '@/components/PostsList'
+import { transcribeVideo, transcribeYouTube, generateBlogPostWithProgress, saveResults, LoadedPost } from '@/lib/client'
+import { Upload, Link, Video, BookOpen, X } from 'lucide-react'
 
 export default function Home() {
   const [alpha, setAlpha] = useState(0.5)
@@ -32,6 +33,9 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState('')
   const [detailedSteps, setDetailedSteps] = useState<Array<{step: string, status: 'pending' | 'active' | 'complete', details?: string}>>([])
   const [startTime, setStartTime] = useState<number | null>(null)
+  const [postsRefreshTrigger, setPostsRefreshTrigger] = useState(0)
+  const [showSavedPosts, setShowSavedPosts] = useState(false)
+  const [savedPostsCount, setSavedPostsCount] = useState(0)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -86,6 +90,53 @@ export default function Home() {
     const elapsed = Math.round((Date.now() - startTime) / 1000)
     return elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`
   }
+
+  const handleLoadPost = (loadedPost: LoadedPost) => {
+    // Clear any existing state
+    setVideoFile(null)
+    setYoutubeUrl(loadedPost.videoUrl || '')
+    setInputMode(loadedPost.videoUrl ? 'url' : 'file')
+    setIsProcessing(false)
+    setProgress(0)
+    setStartTime(null)
+    setCurrentStep('')
+    setDetailedSteps([])
+    setStatus('')
+
+    // Load the blog post data
+    setBlogPost({
+      title: loadedPost.title,
+      excerpt: loadedPost.excerpt,
+      content: loadedPost.content,
+      tags: loadedPost.tags,
+      headings: loadedPost.headings,
+      word_count: loadedPost.word_count,
+      reading_time_minutes: loadedPost.reading_time_minutes,
+      sources: loadedPost.sources,
+      videoUrl: loadedPost.videoUrl
+    })
+    
+    // Show success message
+    setStatus(`Post "${loadedPost.title}" loaded successfully!`)
+  }
+
+  const refreshPosts = () => {
+    setPostsRefreshTrigger(prev => prev + 1)
+  }
+
+  // Handle ESC key to close saved posts panel
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showSavedPosts) {
+        setShowSavedPosts(false)
+      }
+    }
+
+    if (showSavedPosts) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showSavedPosts])
 
   const handleProcess = async () => {
     if (!videoFile && !youtubeUrl) {
@@ -207,6 +258,7 @@ export default function Home() {
         setCurrentStep(`Blog post generated and saved successfully!`)
         setStatus(`Blog post generated and saved to: ${saveResult.savedTo}`)
         console.log('Results saved to:', saveResult.savedTo)
+        refreshPosts() // Refresh the posts list
       } else {
         updateDetailedStep('Saving', 'complete', `Save failed: ${saveResult.error}`)
         setProgress(100)
@@ -232,6 +284,83 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* Left Drawer for Saved Posts */}
+      <div className="fixed left-0 top-0 bottom-0 z-50">
+        {/* Collapsed Drawer Tab */}
+        <div 
+          className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out z-10 ${
+            showSavedPosts ? 'translate-x-80' : 'translate-x-0'
+          }`}
+        >
+          <button
+            onClick={() => setShowSavedPosts(!showSavedPosts)}
+            className="bg-white border border-gray-200 rounded-r-lg shadow-lg p-3 hover:bg-gray-50 hover:shadow-xl transition-all duration-200 group flex flex-col items-center gap-1 min-h-[60px] justify-center"
+            title={showSavedPosts ? 'Close saved posts' : `View saved blog posts${savedPostsCount > 0 ? ` (${savedPostsCount})` : ''}`}
+          >
+            {showSavedPosts ? (
+              <X className="w-5 h-5 text-gray-600" />
+            ) : (
+              <>
+                <BookOpen className="w-5 h-5 text-gray-600" />
+                {savedPostsCount > 0 ? (
+                  <span className="bg-blue-500 text-white text-xs font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center mt-1">
+                    {savedPostsCount}
+                  </span>
+                ) : (
+                  <div className="text-xs text-gray-500 mt-1 writing-mode-vertical text-center">
+                    Posts
+                  </div>
+                )}
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Drawer Content */}
+        <div 
+          className={`bg-white border-r border-gray-200 shadow-xl h-full transition-transform duration-300 ease-in-out ${
+            showSavedPosts ? 'translate-x-0' : '-translate-x-full'
+          } w-80`}
+        >
+          <div className="h-full flex flex-col">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="font-semibold text-lg">Saved Posts ({savedPostsCount})</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">ESC</span>
+                <button
+                  onClick={() => setShowSavedPosts(false)}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Drawer Content */}
+            <div className="flex-1 overflow-hidden">
+              <PostsList 
+                onLoadPost={(post) => {
+                  handleLoadPost(post)
+                  setShowSavedPosts(false) // Close drawer after loading
+                }}
+                onPostDeleted={refreshPosts}
+                onPostsCountChange={setSavedPostsCount}
+                key={postsRefreshTrigger}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay when drawer is open on mobile */}
+      {showSavedPosts && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-20 z-40 md:hidden"
+          onClick={() => setShowSavedPosts(false)}
+        />
+      )}
+
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Video to Blog Converter</h1>
         <p className="text-gray-600">
@@ -239,9 +368,9 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
         {/* Input Section */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Video Input</CardTitle>
@@ -410,7 +539,7 @@ export default function Home() {
         </div>
 
         {/* Preview Section */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-4">
           <BlogPreview 
             blogPost={blogPost} 
             isLoading={isProcessing} 

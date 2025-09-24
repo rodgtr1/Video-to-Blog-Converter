@@ -211,3 +211,94 @@ export async function saveResults(
     }
   }
 }
+
+export interface SavedPost {
+  id: string
+  title: string
+  excerpt: string
+  word_count: number
+  reading_time_minutes: number
+  tags: string[]
+  generated_at: string
+  transcript_length: number
+  folder_name: string
+}
+
+export interface LoadedPost {
+  id: string
+  title: string
+  excerpt: string
+  content: string
+  tags: string[]
+  headings?: Array<{level: number, text: string}>
+  word_count: number
+  reading_time_minutes: number
+  sources?: Array<{type: 'video', url?: string, timestamps?: string[]}>
+  generated_at: string
+  transcript: string
+  videoUrl?: string
+}
+
+export interface PostsListResponse {
+  success: boolean
+  posts: SavedPost[]
+  error?: string
+}
+
+export interface LoadPostResponse {
+  success: boolean
+  post?: LoadedPost
+  error?: string
+}
+
+export interface DeletePostResponse {
+  success: boolean
+  message?: string
+  error?: string
+}
+
+export async function getSavedPosts(): Promise<PostsListResponse> {
+  try {
+    const response = await fetch('/api/posts', {
+      method: 'GET',
+    })
+
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      posts: [],
+      error: error instanceof Error ? error.message : 'Failed to fetch saved posts'
+    }
+  }
+}
+
+export async function loadPost(postId: string): Promise<LoadPostResponse> {
+  try {
+    const response = await fetch(`/api/posts/${encodeURIComponent(postId)}`, {
+      method: 'GET',
+    })
+
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to load post'
+    }
+  }
+}
+
+export async function deletePost(postId: string): Promise<DeletePostResponse> {
+  try {
+    const response = await fetch(`/api/posts?id=${encodeURIComponent(postId)}`, {
+      method: 'DELETE',
+    })
+
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete post'
+    }
+  }
+}

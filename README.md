@@ -16,6 +16,7 @@ Transform your videos into engaging blog posts with AI-powered transcription and
 - **📚 Intelligent Blog Generation**: Advanced content creation with customizable styles
 - **📊 Real-time Progress Tracking**: Detailed step-by-step progress with live updates
 - **💾 Automatic Saving**: All generated content saved locally for future reference
+- **📂 Saved Posts Management**: Browse, reload, and manage previously generated posts via intuitive drawer UI
 
 ### 🔧 Customization Options
 - **🎚️ Alpha Slider**: Control content style from extractive (0.0) to creative (1.0)
@@ -41,6 +42,9 @@ Transform your videos into engaging blog posts with AI-powered transcription and
 - **📱 Responsive Design**: Works on desktop, tablet, and mobile
 - **🔄 Streaming Progress**: Real-time updates during processing
 - **📂 Organized Output**: Structured file organization with metadata
+- **🗂️ Saved Posts Library**: Left-side drawer with all your generated posts
+- **🔄 One-Click Reload**: Load any previously generated post back into the editor
+- **🗑️ Post Management**: Delete unwanted posts directly from the UI
 - **🎨 Modern UI**: Clean, intuitive interface built with Tailwind CSS
 - **⚡ Performance Optimized**: Built with Next.js 15 and Turbopack
 
@@ -282,6 +286,35 @@ Here's everything you need to get running:
      - `transcript.txt` - Raw transcript
      - `blog-post.md` - Formatted blog post
      - `metadata.json` - Processing details
+   - Use the left-side drawer (📖 icon) to browse and reload saved posts
+
+### Saved Posts Management
+
+#### Accessing Your Posts Library
+- **📖 Drawer Toggle**: Click the book icon on the left edge of the screen
+- **Post Count Badge**: Shows the number of saved posts when drawer is closed
+- **Keyboard Shortcut**: Press `ESC` to close the drawer
+- **Auto-close**: Drawer closes automatically after loading a post
+
+#### What Gets Saved
+Each generated blog post is automatically saved to `/posts/[sanitized-video-title]/` containing:
+- **`transcript.txt`**: Complete raw transcript from the video
+- **`blog-post.md`**: Formatted Markdown blog post with frontmatter
+- **`metadata.json`**: Complete processing metadata including:
+  - Word count and reading time
+  - Generated tags
+  - Creation timestamp
+  - Alpha value used
+  - Section headings structure
+  - Source video information
+
+#### Post Management Features
+- **📋 Post Preview**: View title, excerpt, word count, reading time, and tags
+- **📅 Chronological Sorting**: Most recent posts appear first
+- **🔄 One-Click Reload**: Load any post back into the editor for further modifications
+- **🗑️ Safe Deletion**: Delete posts with confirmation dialog
+- **🔍 Quick Stats**: See word count, reading time, and transcript size at a glance
+- **🏷️ Tag Display**: Preview the first few tags with overflow indicator
 
 ### Advanced Features
 
@@ -317,6 +350,9 @@ video-to-blog-converter/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── blogify/         # Blog generation API
+│   │   │   ├── posts/           # Saved posts management API
+│   │   │   │   ├── route.ts     # List and delete posts
+│   │   │   │   └── [id]/        # Load specific post
 │   │   │   ├── save-results/    # File saving API
 │   │   │   └── transcribe/      # Transcription API
 │   │   ├── layout.tsx           # Root layout
@@ -324,7 +360,8 @@ video-to-blog-converter/
 │   ├── components/
 │   │   ├── ui/                  # Reusable UI components
 │   │   ├── AlphaSlider.tsx      # Content style control
-│   │   └── BlogPreview.tsx      # Generated content preview
+│   │   ├── BlogPreview.tsx      # Generated content preview
+│   │   └── PostsList.tsx        # Saved posts drawer component
 │   └── lib/
 │       ├── client.ts            # API client functions
 │       ├── env.ts              # Environment validation
@@ -335,6 +372,10 @@ video-to-blog-converter/
 ├── scripts/
 │   └── transcribe.py           # Secure Python transcription script
 ├── posts/                      # Generated blog posts (auto-created)
+│   └── [video-title]/         # Each post gets its own folder
+│       ├── transcript.txt     # Raw video transcript
+│       ├── blog-post.md       # Formatted blog post
+│       └── metadata.json      # Processing metadata
 ├── requirements.txt           # Python dependencies
 ├── .env.example               # Environment template
 └── README.md                  # This file
