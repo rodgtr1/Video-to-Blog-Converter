@@ -188,7 +188,9 @@ export interface SaveResultsResponse {
 export async function saveResults(
   videoTitle: string,
   transcript: string,
-  blogPost: BlogGenerationResponse
+  blogPost: BlogGenerationResponse,
+  alpha: number,
+  targetWordCount: number
 ): Promise<SaveResultsResponse> {
   try {
     const response = await fetch('/api/save-results', {
@@ -199,6 +201,8 @@ export async function saveResults(
       body: JSON.stringify({
         videoTitle,
         transcript,
+        alpha,
+        targetWordCount,
         blogPost
       })
     })
@@ -300,5 +304,37 @@ export async function deletePost(postId: string): Promise<DeletePostResponse> {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete post'
     }
+  }
+}
+
+export interface RegeneratePostRequest {
+  postId: string
+  alpha: number
+  targetWordCount: number
+  videoUrl?: string
+}
+
+export interface RegeneratePostResponse extends BlogGenerationResponse {
+  version: number
+  savedTo: string
+  files: string[]
+}
+
+export async function regeneratePost(params: RegeneratePostRequest): Promise<RegeneratePostResponse> {
+  try {
+    const response = await fetch('/api/regenerate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params)
+    })
+
+    return await response.json()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to regenerate post'
+    } as RegeneratePostResponse
   }
 }

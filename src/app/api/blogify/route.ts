@@ -231,7 +231,7 @@ async function generateBlogContentWithProgress(
   return final
 }
 
-async function generateBlogContent(
+export async function generateBlogContent(
   transcript: string,
   alpha: number,
   videoUrl?: string,

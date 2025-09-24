@@ -299,3 +299,9 @@
   writing-mode: vertical-rl;
   text-orientation: mixed;
 }
+
+/* Better text wrapping utilities */
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

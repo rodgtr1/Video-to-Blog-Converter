@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { AlphaSlider } from '@/components/AlphaSlider'
 import { BlogPreview } from '@/components/BlogPreview'
 import { PostsList } from '@/components/PostsList'
-import { transcribeVideo, transcribeYouTube, generateBlogPostWithProgress, saveResults, LoadedPost } from '@/lib/client'
+import { transcribeVideo, transcribeYouTube, generateBlogPostWithProgress, saveResults, LoadedPost, regeneratePost } from '@/lib/client'
 import { Upload, Link, Video, BookOpen, X } from 'lucide-react'
 
 export default function Home() {
@@ -36,6 +36,7 @@ export default function Home() {
   const [postsRefreshTrigger, setPostsRefreshTrigger] = useState(0)
   const [showSavedPosts, setShowSavedPosts] = useState(false)
   const [savedPostsCount, setSavedPostsCount] = useState(0)
+  const [currentPostId, setCurrentPostId] = useState<string | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -102,6 +103,9 @@ export default function Home() {
     setCurrentStep('')
     setDetailedSteps([])
     setStatus('')
+    
+    // Set current post ID for regeneration
+    setCurrentPostId(loadedPost.id)
 
     // Load the blog post data
     setBlogPost({
@@ -122,6 +126,57 @@ export default function Home() {
 
   const refreshPosts = () => {
     setPostsRefreshTrigger(prev => prev + 1)
+  }
+  
+  const handleRegenerate = async (postId: string, newAlpha: number, newTargetWordCount: number) => {
+    if (!postId) return
+    
+    setIsProcessing(true)
+    setProgress(0)
+    setStartTime(Date.now())
+    setCurrentStep('Regenerating blog post with new parameters...')
+    setStatus('')
+    
+    try {
+      const result = await regeneratePost({
+        postId,
+        alpha: newAlpha,
+        targetWordCount: newTargetWordCount,
+        videoUrl: youtubeUrl || undefined
+      })
+      
+      if (result.success) {
+        // Update the current blog post with the new version
+        setBlogPost({
+          title: result.title,
+          excerpt: result.excerpt,
+          content: result.content,
+          tags: result.tags,
+          headings: result.headings,
+          word_count: result.word_count,
+          reading_time_minutes: result.reading_time_minutes,
+          sources: result.sources,
+          videoUrl: youtubeUrl || undefined
+        })
+        
+        // Update the alpha and word count sliders to reflect the new values
+        setAlpha(newAlpha)
+        setTargetWordCount(newTargetWordCount)
+        
+        setProgress(100)
+        setCurrentStep(`Blog post regenerated successfully! (Version ${result.version})`)
+        setStatus(`New version created: ${result.files?.join(', ')}`)
+        refreshPosts() // Refresh the posts list to show new version
+      } else {
+        throw new Error(result.error || 'Regeneration failed')
+      }
+    } catch (error) {
+      setStatus(`Error: ${error instanceof Error ? error.message : 'Regeneration failed'}`)
+      setProgress(0)
+      setCurrentStep('')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   // Handle ESC key to close saved posts panel
@@ -146,6 +201,7 @@ export default function Home() {
 
     setIsProcessing(true)
     setBlogPost(null)
+    setCurrentPostId(null) // Clear current post ID for new generation
     setProgress(0)
     setStartTime(Date.now())
     setCurrentStep('Starting process...')
@@ -250,7 +306,7 @@ export default function Home() {
       updateDetailedStep('Saving', 'active', 'Saving transcript and blog post to files...')
       setCurrentStep('Saving results to files...')
       const videoTitle = videoFile?.name || youtubeUrl?.split('v=')[1] || blogResult.title || 'untitled-video'
-      const saveResult = await saveResults(videoTitle, transcriptionResult.text, blogResult)
+      const saveResult = await saveResults(videoTitle, transcriptionResult.text, blogResult, alpha, targetWordCount)
       
       if (saveResult.success) {
         updateDetailedStep('Saving', 'complete', `Saved ${saveResult.files?.length || 0} files`)
@@ -285,10 +341,10 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Left Drawer for Saved Posts */}
-      <div className="fixed left-0 top-0 bottom-0 z-50">
+      <div className="fixed left-0 top-0 bottom-0 z-30 pointer-events-none">
         {/* Collapsed Drawer Tab */}
         <div 
-          className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out z-10 ${
+          className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out z-40 pointer-events-auto ${
             showSavedPosts ? 'translate-x-80' : 'translate-x-0'
           }`}
         >
@@ -318,9 +374,9 @@ export default function Home() {
 
         {/* Drawer Content */}
         <div 
-          className={`bg-white border-r border-gray-200 shadow-xl h-full transition-transform duration-300 ease-in-out ${
+          className={`bg-white border-r border-gray-200 shadow-xl h-full transition-transform duration-300 ease-in-out pointer-events-auto ${
             showSavedPosts ? 'translate-x-0' : '-translate-x-full'
-          } w-80`}
+          } w-80 z-30`}
         >
           <div className="h-full flex flex-col">
             {/* Drawer Header */}
@@ -356,7 +412,7 @@ export default function Home() {
       {/* Overlay when drawer is open on mobile */}
       {showSavedPosts && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-20 z-40 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-20 z-20 md:hidden"
           onClick={() => setShowSavedPosts(false)}
         />
       )}
@@ -497,7 +553,7 @@ export default function Home() {
 
               {/* Status/Error Messages */}
               {status && !isProcessing && (
-                <div className={`text-sm p-2 rounded ${
+                <div className={`text-sm p-3 rounded break-words overflow-wrap-anywhere ${
                   status.includes('Error') 
                     ? 'bg-red-50 text-red-700 border border-red-200' 
                     : 'bg-green-50 text-green-700 border border-green-200'
@@ -544,6 +600,10 @@ export default function Home() {
             blogPost={blogPost} 
             isLoading={isProcessing} 
             onBlogPostUpdate={setBlogPost}
+            onRegenerate={handleRegenerate}
+            currentPostId={currentPostId}
+            currentAlpha={alpha}
+            currentTargetWordCount={targetWordCount}
           />
         </div>
       </div>

@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Download, Eye, Code, Edit3, Save, X, ExternalLink } from 'lucide-react'
+import { Download, Eye, Code, Edit3, Save, X, ExternalLink, RefreshCw } from 'lucide-react'
 
 interface BlogPost {
   title: string
@@ -24,9 +24,13 @@ interface BlogPreviewProps {
   blogPost: BlogPost | null
   isLoading: boolean
   onBlogPostUpdate?: (updatedPost: BlogPost) => void
+  onRegenerate?: (postId: string, alpha: number, targetWordCount: number) => void
+  currentPostId?: string | null
+  currentAlpha?: number
+  currentTargetWordCount?: number
 }
 
-export function BlogPreview({ blogPost, isLoading, onBlogPostUpdate }: BlogPreviewProps) {
+export function BlogPreview({ blogPost, isLoading, onBlogPostUpdate, onRegenerate, currentPostId, currentAlpha, currentTargetWordCount }: BlogPreviewProps) {
   const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview')
   const [isEditing, setIsEditing] = useState(false)
   const [editableContent, setEditableContent] = useState('')
@@ -217,6 +221,17 @@ date: ${new Date().toISOString()}
                     <Button onClick={startEditing} size="sm" variant="outline">
                       <Edit3 className="w-4 h-4 mr-1" />
                       Edit
+                    </Button>
+                  )}
+                  {onRegenerate && currentPostId && (
+                    <Button 
+                      onClick={() => onRegenerate(currentPostId, currentAlpha || 0.5, currentTargetWordCount || 500)} 
+                      size="sm" 
+                      variant="outline"
+                      title="Regenerate with different parameters"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Regenerate
                     </Button>
                   )}
                   <Button onClick={exportMarkdown} size="sm">

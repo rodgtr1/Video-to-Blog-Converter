@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
     
-    const { videoTitle, transcript, blogPost } = validation.data
+    const { videoTitle, transcript, alpha, targetWordCount, blogPost } = validation.data
 
     // Sanitize the video title for use as a folder name
     const sanitizedTitle = sanitizeFilename(videoTitle)
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
 *${blogPost.excerpt}*
 
-**Word Count:** ${blogPost.word_count} | **Reading Time:** ${blogPost.reading_time_minutes} minutes
+**Word Count:** ${blogPost.word_count} | **Reading Time:** ${blogPost.reading_time_minutes} minutes | **Alpha:** ${alpha} | **Target:** ${targetWordCount}
 
 **Tags:** ${blogPost.tags.join(', ')}
 
@@ -60,7 +60,7 @@ ${blogPost.content}
 
 ---
 
-*Generated from video transcript on ${new Date().toISOString().split('T')[0]}*
+*Generated from video transcript on ${new Date().toISOString().split('T')[0]} (α=${alpha})*
 `
 
     const blogPath = path.join(videoDir, 'blog-post.md')
@@ -75,6 +75,8 @@ ${blogPost.content}
       tags: blogPost.tags,
       headings: blogPost.headings,
       sources: blogPost.sources,
+      alpha_used: alpha,
+      target_word_count: targetWordCount,
       generated_at: new Date().toISOString(),
       transcript_length: transcript.length
     }

@@ -25,6 +25,8 @@ export const blogGenerationSchema = z.object({
 export const saveResultsSchema = z.object({
   videoTitle: z.string().min(1).max(255),
   transcript: z.string().min(1),
+  alpha: z.number().min(0).max(1),
+  targetWordCount: z.number().min(100).max(5000),
   blogPost: z.object({
     title: z.string(),
     excerpt: z.string(),
