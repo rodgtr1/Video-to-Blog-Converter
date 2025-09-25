@@ -17,6 +17,7 @@ Transform your videos into engaging blog posts with AI-powered transcription and
 - **📊 Real-time Progress Tracking**: Detailed step-by-step progress with live updates
 - **💾 Automatic Saving**: All generated content saved locally for future reference
 - **📂 Saved Posts Management**: Browse, reload, and manage previously generated posts via intuitive drawer UI
+- **🔄 Post Regeneration**: Regenerate any saved post with different parameters (alpha, word count) while preserving all versions
 
 ### 🔧 Customization Options
 - **🎚️ Alpha Slider**: Control content style from extractive (0.0) to creative (1.0)
@@ -44,6 +45,8 @@ Transform your videos into engaging blog posts with AI-powered transcription and
 - **📂 Organized Output**: Structured file organization with metadata
 - **🗂️ Saved Posts Library**: Left-side drawer with all your generated posts
 - **🔄 One-Click Reload**: Load any previously generated post back into the editor
+- **🔁 Smart Regeneration**: Regenerate any post with different alpha/word count settings
+- **📚 Version Management**: Automatic versioning preserves all generated variations
 - **🗑️ Post Management**: Delete unwanted posts directly from the UI
 - **🎨 Modern UI**: Clean, intuitive interface built with Tailwind CSS
 - **⚡ Performance Optimized**: Built with Next.js 15 and Turbopack
@@ -298,23 +301,74 @@ Here's everything you need to get running:
 
 #### What Gets Saved
 Each generated blog post is automatically saved to `/posts/[sanitized-video-title]/` containing:
-- **`transcript.txt`**: Complete raw transcript from the video
-- **`blog-post.md`**: Formatted Markdown blog post with frontmatter
-- **`metadata.json`**: Complete processing metadata including:
-  - Word count and reading time
-  - Generated tags
-  - Creation timestamp
-  - Alpha value used
-  - Section headings structure
-  - Source video information
+- **`transcript.txt`**: Complete raw transcript from the video (preserved across regenerations)
+- **`blog-post.md`**: Original formatted Markdown blog post with alpha value in metadata
+- **`blog-post-v2.md`**: Regenerated versions (v2, v3, etc.) when using different parameters
+- **`metadata.json`**: Main metadata file tracking all versions and latest settings
+- **`metadata-v2.json`**: Version-specific metadata for each regeneration
+
+**Blog Post Headers Now Include**:
+```markdown
+**Word Count:** 487 | **Reading Time:** 2 minutes | **Alpha:** 0.3 | **Target:** 500
+```
 
 #### Post Management Features
 - **📋 Post Preview**: View title, excerpt, word count, reading time, and tags
 - **📅 Chronological Sorting**: Most recent posts appear first
 - **🔄 One-Click Reload**: Load any post back into the editor for further modifications
+- **🔁 Regenerate Button**: When a saved post is loaded, a "Regenerate" button appears in the preview
+- **⚡ Smart Regeneration**: Regenerates using current slider values (alpha & word count)
+- **📚 Automatic Versioning**: Each regeneration creates a new version (v2, v3, etc.)
 - **🗑️ Safe Deletion**: Delete posts with confirmation dialog
 - **🔍 Quick Stats**: See word count, reading time, and transcript size at a glance
 - **🏷️ Tag Display**: Preview the first few tags with overflow indicator
+
+### Post Regeneration Workflow
+
+#### How to Regenerate Posts
+
+1. **Load a Saved Post**: Use the left drawer (📖 icon) to load any previously generated post
+2. **Adjust Parameters**: Modify the Alpha slider or Target Word Count as desired
+3. **Click Regenerate**: A "Regenerate" button appears in the blog preview when a saved post is loaded
+4. **Version Creation**: The system creates a new version (e.g., `blog-post-v2.md`) with your new settings
+5. **Preserve History**: All previous versions remain intact - nothing gets overwritten
+
+#### Regeneration Use Cases
+
+**Experiment with Creativity Levels**:
+- Generate at α=0.3 (extractive) for factual content
+- Regenerate at α=0.7 (creative) for more engaging flow
+- Compare versions to find the perfect style
+
+**Adjust Length Requirements**:
+- Original: 500 words for social media
+- Regenerate: 1200 words for comprehensive blog post
+- Keep both versions for different platforms
+
+**Fine-tune Content Style**:
+- Try different alpha values to match your brand voice
+- Generate multiple variations for A/B testing
+- Create content for different audiences from same transcript
+
+#### Version Management
+
+**File Structure After Regeneration**:
+```
+posts/my-productivity-video/
+├── transcript.txt              # Original transcript (never changes)
+├── blog-post.md               # Original version (α=0.3, 500 words)
+├── blog-post-v2.md            # First regeneration (α=0.7, 500 words)
+├── blog-post-v3.md            # Second regeneration (α=0.7, 1200 words)
+├── metadata.json              # Tracks all versions + latest info
+├── metadata-v2.json           # V2-specific metadata
+└── metadata-v3.json           # V3-specific metadata
+```
+
+**Version Tracking**:
+- Each version includes alpha value and target word count in the blog post header
+- Metadata tracks which version was generated with which parameters
+- Footer notes show generation date and alpha value used
+- Easy to identify which version matches your needs
 
 ### Advanced Features
 
