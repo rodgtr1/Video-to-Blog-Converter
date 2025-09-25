@@ -287,9 +287,16 @@ Here's everything you need to get running:
    - Generated blog posts are automatically saved to `/posts/[video-title]/`
    - Each folder contains:
      - `transcript.txt` - Raw transcript
-     - `blog-post.md` - Formatted blog post
-     - `metadata.json` - Processing details
+     - `blog-post.md` - Formatted blog post with alpha value
+     - `metadata.json` - Processing details including alpha and target word count
    - Use the left-side drawer (📖 icon) to browse and reload saved posts
+
+5. **Regenerate (Optional)**:
+   - Load any saved post from the drawer
+   - Adjust Alpha slider or Target Word Count
+   - Click the "Regenerate" button in the blog preview
+   - New version saved as `blog-post-v2.md`, `blog-post-v3.md`, etc.
+   - Compare different versions to find your perfect content style
 
 ### Saved Posts Management
 
@@ -407,7 +414,8 @@ video-to-blog-converter/
 │   │   │   ├── posts/           # Saved posts management API
 │   │   │   │   ├── route.ts     # List and delete posts
 │   │   │   │   └── [id]/        # Load specific post
-│   │   │   ├── save-results/    # File saving API
+│   │   │   ├── regenerate/      # Post regeneration API
+│   │   │   ├── save-results/    # File saving API (now includes alpha/word count)
 │   │   │   └── transcribe/      # Transcription API
 │   │   ├── layout.tsx           # Root layout
 │   │   └── page.tsx            # Main page
@@ -583,6 +591,13 @@ pip install yt-dlp
 - Experiment with different models: `ollama pull qwen2.5:14b-instruct`
 - Increase alpha values (0.6-0.8) for better structured output
 - Consider switching to OpenAI for production use
+
+#### Regeneration issues
+- **"Regenerate button not showing"**: Make sure you've loaded a saved post first
+- **"Transcript not found"**: Original post may have been deleted or moved
+- **"Regeneration failed"**: Check that your OpenAI API key is valid and has credits
+- **"Version numbers seem wrong"**: Each post folder maintains its own version counter independently
+- **"Old versions disappeared"**: Versions are never deleted automatically - check the correct post folder
 
 ### Debug Mode
 
