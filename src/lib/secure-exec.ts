@@ -76,6 +76,17 @@ export class SecureCommandExecutor {
         '-x',
         '--audio-format', 'wav',
         '--audio-quality', '0',
+        '--extractor-args', 'youtube:player_client=android,web',
+        '--user-agent', 'Mozilla/5.0 (Linux; Android 11; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+        '--referer', 'https://m.youtube.com/',
+        '--add-header', 'Accept-Language:en-US,en;q=0.9',
+        '--add-header', 'Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        '--extractor-retries', '5',
+        '--fragment-retries', '5',
+        '--retry-sleep', '3',
+        '--sleep-interval', '2',
+        '--max-sleep-interval', '10',
+        '--no-warnings',
         '-o', outputPath.replace('.wav', '.%(ext)s'),
         youtubeUrl
       ])
